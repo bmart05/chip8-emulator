@@ -50,7 +50,6 @@ int main(int argc, char * argv[]) {
             chip8.cycle();
             cycle_acc -= CYCLE_INTERVAL;
         }
-
         while(timer_acc >= TIMER_INTERVAL) {
             chip8.tick_timers();
             timer_acc -= TIMER_INTERVAL;

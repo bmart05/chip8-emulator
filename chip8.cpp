@@ -360,3 +360,4 @@ bool Chip8::pop_stack(uint16_t& out_addr)
 
     return true;
 }
+

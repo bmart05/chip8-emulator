@@ -46,7 +46,7 @@ Platform::~Platform() {
 bool Platform::init(const std::string title, int window_width, int window_height, int tex_width, int tex_height)
 {
     //initialise SDL3 video subsystem
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << '\n';
         return false;
     }
@@ -66,6 +66,8 @@ bool Platform::init(const std::string title, int window_width, int window_height
     impl->renderFrame = SDL_CreateTexture(impl->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, tex_width, tex_height);
     SDL_SetTextureScaleMode(impl->renderFrame, SDL_SCALEMODE_NEAREST);
 
+    std::array<uint8_t, 64 * 32> blank{};
+    present(blank.data());
     return true;
 }
 
