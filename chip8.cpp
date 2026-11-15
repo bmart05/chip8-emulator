@@ -145,29 +145,41 @@ void Chip8::cycle()
                         V[0xF] = 0;
                     }
                     break;
-                case 0x5:
+                case 0x5: { //subtract Y - X
+                    uint8_t flag = (V[X] >= V[Y]) ? 1 : 0;
                     V[X] = V[X] - V[Y];
-
-                    if (V[X] >= V[Y]) {
-                        V[0xF] = 1;
-                    }
-                    else {
-                        V[0xF] = 0;
-                    }
+                    V[0xF] = flag;
                     break;
-                case 0x6:
+                }
+                case 0x6: { //right shift
+                    if(SHIFT_QUIRK) {
+                        V[X] = V[Y];
+                    }
                     
-                case 0x7:
-                    V[X] = V[Y] - V[X];
+                    uint8_t flag = V[X] & 0x01;
+                    V[X] >>= 1;
 
-                    if (V[Y] >= V[X]) {
-                        V[0xF] = 1;
-                    }
-                    else {
-                        V[0xF] = 0;
-                    }
+                    V[0xF] = flag;
                     break;
-                
+                }
+                case 0x7: { //subtract X - Y
+                    uint8_t flag = (V[Y] >= V[X]) ? 1 : 0;
+                    V[X] = V[Y] - V[X];
+                    V[0xF] = flag; 
+
+                    break;
+                }
+                case 0xE: { //left shift
+                    if(SHIFT_QUIRK) {
+                        V[X] = V[Y];
+                    }
+                    
+                    uint8_t flag = (V[X] & 0x01) >> 7;
+                    V[X] <<= 1;
+
+                    V[0xF] = flag;
+                    break;
+                }
             }
 
             break;
@@ -177,6 +189,16 @@ void Chip8::cycle()
             }
         case 0xA:
             I = NNN;
+            break;
+        case 0xB:
+            if(JUMP_QUIRK) { //Implements a quirk from CHIP-48 and SUPER-CHIP
+                pc = NNN + V[X];
+            } else {
+                pc = NNN + V[0x0];
+            }
+            break;
+        case 0xC:
+            V[X] = static_cast<uint8_t>(rand_byte(rng)) & NN;
             break;
         case 0xD: { //display draw function (DXYN)
             uint8_t x_coord = V[X] % 64;

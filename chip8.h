@@ -21,6 +21,9 @@
 
 #define KEY_COUNT 16
 
+#define SHIFT_QUIRK 1
+#define JUMP_QUIRK 0
+
 class Chip8 {
 public:
     Chip8();
@@ -50,6 +53,6 @@ private:
     std::array<uint8_t, SCREEN_WIDTH * SCREEN_HEIGHT> display{}; //framebuffer representing pixel state (either 0 or 1)
     std::array <bool, KEY_COUNT> keypad{}; //tracks whether each hex key is pressed or released (0x0 to 0xF)
     bool draw_flag{false}; //keeps track of whether any pixels changed during the last cycle, only redraw the screen when needed
-        
-
+    std::mt19937 rng{std::random_device{}()};                  //ensures random numbers are seeded 
+    std::uniform_int_distribution<uint16_t> rand_byte{0, 255}; //when the emulator starts rather than every cycle
 };
