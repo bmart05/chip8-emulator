@@ -23,6 +23,7 @@
 
 #define SHIFT_QUIRK 1
 #define JUMP_QUIRK 0
+#define MEMORY_QUIRK 0
 
 class Chip8 {
 public:
@@ -39,6 +40,7 @@ public:
     bool should_draw() const;
     void reset_draw_flag();
     bool is_beeping() const; //returns when sound_timer > 0
+    std::array<bool, KEY_COUNT>& get_keypad() { return keypad; }
 private:
     std::array<uint8_t, MEMORY_SIZE> memory{}; //direct-addressed 4KB RAM
     std::array<uint8_t, REGISTER_COUNT> V{}; //16 general purpose 8-bit registers (V0-VF) (VF is the carry/collision flag register as well)

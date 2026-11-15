@@ -18,6 +18,7 @@ public:
 
     bool init(const std::string title, int window_width, int window_height, int tex_width, int tex_height);
     void present(const uint8_t* pixels); //pitch is the number of bytes in one horizontal row of pixels in memory
+    bool process_input(std::array<bool, 16>& keys);
     void shutdown();
 private:
     struct Impl;

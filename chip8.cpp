@@ -84,7 +84,7 @@ void Chip8::cycle()
         case 0x0:
             switch(opcode) {
                 case 0x00E0: //clear screen instruction
-                    draw_flag = false;
+                    draw_flag = true;
                     display.fill(0);
                     break;
                 case 0x00EE: //subroutines (return)
@@ -174,7 +174,7 @@ void Chip8::cycle()
                         V[X] = V[Y];
                     }
                     
-                    uint8_t flag = (V[X] & 0x01) >> 7;
+                    uint8_t flag = (V[X] & 0x80) >> 7;
                     V[X] <<= 1;
 
                     V[0xF] = flag;
@@ -197,7 +197,7 @@ void Chip8::cycle()
                 pc = NNN + V[0x0];
             }
             break;
-        case 0xC:
+        case 0xC: //generate random number into V[X]
             V[X] = static_cast<uint8_t>(rand_byte(rng)) & NN;
             break;
         case 0xD: { //display draw function (DXYN)
@@ -234,12 +234,89 @@ void Chip8::cycle()
             draw_flag = true;
             break;
         }
+        case 0xE:
+            switch(NN) {
+                case 0x9E: {
+                    uint8_t key = V[X] & 0x0F; //map to 0-15
+                    if(keypad[key]) {
+                        pc += 2;
+                    }
+                    break;
+                }
+                case 0xA1: {
+                    uint8_t key = V[X] & 0x0F; //map to 0-15
+                    if(!keypad[key]) {
+                        pc += 2;
+                    }
+                    break;
+                }
+            }
+            break;
+        case 0xF: //All in format of 0xFX__
+            switch(NN) {
+                case 0x0A: //get key
+                    for(uint8_t i = 0; i < keypad.size(); i++) {
+                        if(keypad[i]) {
+                            V[X] = i;
+                            return;
+                        }
+                    }
+                    pc -= 2; //instruction should not advance until a key is pressed
+                    break;
+                case 0x07: //set V[x] to delay_timer
+                    V[X] = delay_timer;
+                    break;
+                case 0x15: //set delay timer to V[X]
+                    delay_timer = V[X];
+                    break;
+                case 0x1E: //add V[X] to index register
+                    I += V[X];
+                    break;
+                case 0x18: //set sound timer to V[X]
+                    sound_timer = V[X];
+                    break; 
+                case 0x29: //font character
+                    I = FONTSET_START_ADDRESS + ((V[X] & 0x0F) * 5);
+                    break;
+                case 0x33: { //load individual digits of a binary number into consecutive memory slots
+                    uint8_t value = V[X];    
+
+                    memory[I] = value / 100; //hundreds digit
+                    memory[I+1] = (value / 10) % 10; //tens digit
+                    memory[I+2] = value % 10; //ones digit
+                    break;
+                }
+                case 0x55: //load registers 0-X into memory
+                    for(uint8_t i = 0; i <= X; i++) {
+                        memory[I+i] = V[i]; //store value into memory from index register
+                    }
+
+                    if(MEMORY_QUIRK) { 
+                        I += X+1;
+                    }
+                    break;
+                case 0x65: //store values from I-I+X into registers 0-X
+                    for(uint8_t i = 0; i <= X; i++) {
+                        V[i] = memory[I+i]; //load value from memory into register
+                    }
+
+                    if(MEMORY_QUIRK) { 
+                        I += X+1;
+                    }
+                    break;
+            }
     }
 
 }
 
 void Chip8::tick_timers()
 {
+    if(delay_timer > 0) {
+        --delay_timer;
+    }
+    if(sound_timer > 0) {
+        --sound_timer;
+    }
 }
 
 void Chip8::set_key(uint8_t key, bool is_pressed)
