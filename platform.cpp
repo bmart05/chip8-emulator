@@ -119,5 +119,6 @@ void Platform::shutdown()
 {
     SDL_DestroyRenderer(impl->renderer);
     SDL_DestroyWindow(impl->window);
+    SDL_DestroyTexture(impl->renderFrame);
     SDL_Quit();
 }
